@@ -6,8 +6,13 @@ package es.iespuertodelacruz.ymp.controller;
 
 import es.iespuertodelacruz.ymp.model.Comida;
 import es.iespuertodelacruz.ymp.model.Escenario;
+import es.iespuertodelacruz.ymp.model.Muro;
+import es.iespuertodelacruz.ymp.model.Parte;
 import es.iespuertodelacruz.ymp.model.Snake;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Random;
 import java.util.ResourceBundle;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -16,6 +21,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -43,14 +49,13 @@ public class FXMLDocumentController implements Initializable {
 
     GraphicsContext gc;
     
-    int contador = 0;
+    boolean juegoIniciado;
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
         gc = canvasEscenario.getGraphicsContext2D();
         mapa = new Escenario();
-        mapa.setMapaCanvas(canvasEscenario);
         snake = mapa.getSnake();
         mapa.addComida();
         timeline = obtenerTimeline();
@@ -61,7 +66,7 @@ public class FXMLDocumentController implements Initializable {
     Timeline obtenerTimeline() {
 
         Timeline tl = new Timeline(new KeyFrame(
-                Duration.millis(200), movimiento -> jugar()
+                Duration.millis(50), movimiento -> jugar()
         ));
 
         tl.setCycleCount(Animation.INDEFINITE);
@@ -71,58 +76,56 @@ public class FXMLDocumentController implements Initializable {
     
     public void jugar(){
         
-
-        gc.clearRect(snake.getSnake().getLast().getX(), snake.getSnake().getLast().getY(), 10, 10);
-        gc.setFill(Color.rgb(40, 50, 0));
-        switch (snake.getDireccion()) {
-            case "UP":
-                gc.fillRect(snake.getSnake().getFirst().getX(), snake.getSnake().getFirst().getY()-10, 10, 10);//coordenadas (X, Y, ancho, largo)
-                break;
-            case "DOWN":
-                gc.fillRect(snake.getSnake().getFirst().getX(), snake.getSnake().getFirst().getY()+10, 10, 10);//coordenadas (X, Y, ancho, largo)
-                break;
-
-            case "RIGHT":
-                gc.fillRect(snake.getSnake().getFirst().getX()+10, snake.getSnake().getFirst().getY(), 10, 10);//coordenadas (X, Y, ancho, largo)
-                break;
-
-            case "LEFT":
-                
-                gc.fillRect(snake.getSnake().getFirst().getX()-10, snake.getSnake().getFirst().getY(), 10, 10);//coordenadas (X, Y, ancho, largo)
-                break;
+        Random rnd = new Random();
+        
+        gc.clearRect(0, 0, canvasEscenario.getWidth(), canvasEscenario.getHeight());
+        
+       
+        LinkedList<Parte> snakeCompleta = this.snake.getSnake();
+        
+        for (Parte parte : snakeCompleta) {
+            gc.fillRect(parte.getX()*10, parte.getY()*10, 10, 10);
+            gc.setFill(Color.rgb(rnd.nextInt(100), rnd.nextInt(256), 100));
         }
-        
 
-
-        //mapa.addMuro();
-        
-
-        
         gc.setFill(Color.BISQUE);
        
-        /*
+       
         ArrayList<Muro> muros = mapa.getMuros();
         
             for (Muro muro : muros) {
                 
-                gc.fillRect(muro.getX(), muro.getY(), 15, 15);
+                gc.fillRect(muro.getX()*10, muro.getY()*10, 10, 10);
             }
-         */   
+            
+            
+            
+
+        gc.setFill(Color.RED);
         
-        gc.fillRect(mapa.getComida().getX(), mapa.getComida().getY(), 10, 10);
-        System.out.println("Comida: " + mapa.getComida().getX() + ", " + mapa.getComida().getY());
+            
+        gc.fillOval(mapa.getComida().getX()*10, mapa.getComida().getY()*10, 10, 10);
+        
            
         mapa.avanzar();
-        System.out.println(snake.getSnake().getFirst().getX() + ", " + 
-                snake.getSnake().getFirst().getY() + " SNAKE");
+        
+        if(mapa.isPerdido()){
+            timeline.stop();
+            Alert alerta = new Alert(Alert.AlertType.INFORMATION, "HAS PERDIDO!");
+            alerta.show();
+        }
+        
         
     }
 
     @FXML
     private void start(MouseEvent event) {
-        
+        if(juegoIniciado){
+            timeline.stop();
+        }else{
         timeline.play();
-        
+        }
+        juegoIniciado = !juegoIniciado;
     }
 
     @FXML

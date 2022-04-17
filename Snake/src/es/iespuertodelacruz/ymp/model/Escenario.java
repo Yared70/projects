@@ -6,6 +6,7 @@ package es.iespuertodelacruz.ymp.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Random;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -16,51 +17,45 @@ import javafx.scene.canvas.GraphicsContext;
  */
 public class Escenario {
 
-    Canvas mapaCanvas;
     String mapaMatriz[][];
     Comida comida;
     ArrayList<Muro> muros;
     Snake snake;
-    int cantidadMurosMax;
+    int cantidadMuros;
+    boolean perdido;
+    int cantidadComidas;
 
     public Escenario() {
 
-        this.mapaMatriz = null;
+        this.mapaMatriz = new String[50][50];
         this.muros = new ArrayList<Muro>();
         this.comida = null;
-        this.mapaCanvas = null;
         this.snake = new Snake();
-        this.cantidadMurosMax = 20;
+        this.cantidadMuros = 0;
+        this.perdido = false;
+        this.cantidadComidas = 0;
 
-    }
-    
-    public Escenario(int sizeEscenario){
-        
-        this.mapaMatriz = new String[sizeEscenario][sizeEscenario];
-        this.muros = new ArrayList<Muro>();
-        this.mapaCanvas = null;
-        this.snake = new Snake();
-        this.cantidadMurosMax = 20;
-        
     }
 
     Random rnd = new Random();
-    
+
     public void addComida() {
 
-        int x = rnd.nextInt((int) mapaCanvas.getWidth());
-        int y = rnd.nextInt((int) mapaCanvas.getHeight());
-        
-        
+        setComida(null);
+
+        int x = rnd.nextInt(mapaMatriz.length - 1) + 1;
+        int y = rnd.nextInt(mapaMatriz.length - 1) + 1;
+
         this.comida = new Comida(x, y);
         boolean colocado = false;
         while (!colocado) {
 
             if (isOcupado(x, y)) {
-                x = rnd.nextInt((int) mapaCanvas.getWidth());
-                y = rnd.nextInt((int) mapaCanvas.getHeight());
-            }else{
+                x = rnd.nextInt(mapaMatriz.length - 1) + 1;
+                y = rnd.nextInt(mapaMatriz.length - 1) + 1;
+            } else {
                 colocado = true;
+
             }
         }
 
@@ -68,98 +63,105 @@ public class Escenario {
 
     public void addMuro() {
 
-        int size = rnd.nextInt(100) + 1;
-        int direccion = rnd.nextInt(4);
-        int x = 0;
-        int y = 0;
-        boolean colocado = false;
+        if (cantidadMuros <= 40 && cantidadComidas == 3) {
+            int murosPuestos = 0;
+            while(murosPuestos < 3){
+            
+            int size = rnd.nextInt(5) + 5;
+            int direccion = rnd.nextInt(4);
+            int x = 0;
+            int y = 0;
+            boolean colocado = false;
+            
+            switch (direccion) {
+                case 0:
 
-        switch (direccion) {
-            case 0:
+                    x = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    y = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    while (!colocado) {
 
-                x = rnd.nextInt((int) mapaCanvas.getWidth());
-                y = rnd.nextInt((int) mapaCanvas.getHeight());
-                while (!colocado) {
+                        for (int i = 0; i < size; i++) {
+                            if (!isOcupado(x, y - i) && y > 0) {
 
-                    for (int i = 0; i < size; i++) {
-                        if (!isOcupado(x, y - i) && y > 0) {
+                                muros.add(new Muro(x, y - i));
 
-                            muros.add(new Muro(x, y - i));
-
-                        }
-
-                    }
-                    colocado = true;
-                }
-
-                break;
-            case 1:
-
-                x = rnd.nextInt((int) mapaCanvas.getWidth());
-                y = rnd.nextInt((int) mapaCanvas.getHeight());
-                while (!colocado) {
-
-                    for (int i = 0; i < size; i++) {
-                        if (!isOcupado(x + i, y) && y > mapaCanvas.getWidth()) {
-
-                            muros.add(new Muro(x + i, y));
+                            }
 
                         }
-
+                        colocado = true;
                     }
-                    colocado = true;
-                }
 
-                break;
-            case 2:
+                    break;
+                case 1:
 
-                x = rnd.nextInt((int) mapaCanvas.getWidth());
-                y = rnd.nextInt((int) mapaCanvas.getHeight());
-                while (!colocado) {
+                    x = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    y = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    while (!colocado) {
 
-                    for (int i = 0; i < size; i++) {
-                        if (!isOcupado(x, y + i) && y > mapaCanvas.getHeight()) {
+                        for (int i = 0; i < size; i++) {
+                            if (!isOcupado(x + i, y) && y > mapaMatriz.length) {
 
-                            muros.add(new Muro(x, y + i));
+                                muros.add(new Muro(x + i, y));
+
+                            }
 
                         }
-
+                        colocado = true;
                     }
-                    colocado = true;
-                }
 
-                break;
-            case 3:
+                    break;
+                case 2:
 
-                x = rnd.nextInt((int) mapaCanvas.getWidth());
-                y = rnd.nextInt((int) mapaCanvas.getHeight());
-                while (!colocado) {
+                    x = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    y = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    while (!colocado) {
 
-                    for (int i = 0; i < size; i++) {
-                        if (!isOcupado(x - i, y) && x > 0) {
+                        for (int i = 0; i < size; i++) {
+                            if (!isOcupado(x, y + i) && y > mapaMatriz.length) {
 
-                            muros.add(new Muro(x - i, y));
+                                muros.add(new Muro(x, y + i));
+
+                            }
 
                         }
-
+                        colocado = true;
                     }
-                    colocado = true;
-                }
 
-                break;
+                    break;
+                case 3:
 
+                    x = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    y = rnd.nextInt(mapaMatriz.length - 4) + 2;
+                    while (!colocado) {
+
+                        for (int i = 0; i < size; i++) {
+                            if (!isOcupado(x - i, y) && x > 0) {
+
+                                muros.add(new Muro(x - i, y));
+
+                            }
+
+                        }
+                        colocado = true;
+                    }
+
+                    break;
+
+            }
+            this.cantidadMuros += 1;
+            cantidadComidas = 0;
+            murosPuestos += 1;
+            }
         }
-        
-        this.cantidadMurosMax += 1;
 
     }
 
     public boolean isOcupado(int x, int y) {
 
         boolean ocupado = false;
-            if (comida.getX() == x && comida.getY() == y) {
-                return true;
-            }
+        if (comida.getX() == x && comida.getY() == y) {
+            return true;
+        }
         for (Muro muro : muros) {
             if (muro.getX() == x && muro.getY() == y) {
                 return true;
@@ -175,132 +177,163 @@ public class Escenario {
 
     public boolean habraChoque(int x, int y) {
 
-        boolean movPosible = true;
+        boolean choque = false;
 
-        for (int i = 1; i < snake.getSnake().size(); i++) {
+        for (int i = snake.getSnake().size() - 1; i >= 1; i--) {
 
             if (snake.getSnake().get(i).getX() == x
                     && snake.getSnake().get(i).getY() == y) {
-                return false;
+                choque = true;
             }
 
         }
+
         for (Muro muro : muros) {
             if (muro.getX() == x && muro.getY() == y) {
-                return false;
+                choque = true;
             }
         }
 
-        return movPosible;
+        return choque;
 
     }
-    
-    public boolean encontradaComida(int x, int y){
-        
+
+    public boolean encontradaComida(int x, int y) {
+
         boolean comidaEncontrada = false;
-        
-        
-        if(comida.getX() == x && comida.getY() == y){
-            return true;
+
+        if (comida.getX() == x && comida.getY() == y) {
+            comidaEncontrada = true;
+            cantidadComidas += 1;
+            addMuro();
+            addMuro();
         }
-        
-       
-        
+
         return comidaEncontrada;
-        
+
     }
-    
+
     public void avanzar() {
-        
-        
-        int xCabeza = this.snake.getSnake().getFirst().getX();
-        int yCabeza = this.snake.getSnake().getFirst().getY();
+
+        Parte cabeza = this.snake.getSnake().getFirst();
+        int xCabeza = cabeza.getX();
+        int yCabeza = cabeza.getY();
+
+        Parte cola = this.snake.getSnake().getLast();
+
+        int tamanoSnake = this.snake.getSnake().size();
+        LinkedList<Parte> snakeCompleta = this.snake.getSnake();
+
+        for (int i = tamanoSnake - 1; i >= 1; i--) {
+            snakeCompleta.get(i).setX(snakeCompleta.get(i - 1).getX());
+            snakeCompleta.get(i).setY(snakeCompleta.get(i - 1).getY());
+
+        }
 
         switch (this.snake.getDireccion()) {
             case "UP":
-                this.snake.addParte(new Parte(xCabeza, yCabeza-10));
+                this.snake.getSnake().getFirst().setY(yCabeza - 1);
                 this.snake.setDireccion("UP");
-                if(yCabeza < 0){
-                    
-                    this.snake.getSnake().getFirst().setY((int)mapaCanvas.getHeight());
-                    
-                    
+                if (yCabeza < 1) {
+
+                    cabeza.setY(mapaMatriz.length-1);
+
                 }
-                if(encontradaComida(xCabeza, yCabeza-10)){
-                    
-                    this.snake.addParte(new Parte(xCabeza, yCabeza-20));
+                if (encontradaComida(xCabeza, yCabeza)) {
+
+                    this.snake.addParte(new Parte(cola.getX(), cola.getY() + 1));
                     addComida();
+
                 }
                 break;
 
             case "DOWN":
-                this.snake.addParte(new Parte(xCabeza, yCabeza+10));
+                this.snake.getSnake().getFirst().setY(yCabeza + 1);
                 this.snake.setDireccion("DOWN");
-                
-                if(yCabeza > (int)mapaCanvas.getHeight()){
-                    
-                    this.snake.getSnake().getFirst().setY(0);
-                    
+
+                if (yCabeza > mapaMatriz.length-1) {
+
+                    cabeza.setY(1);
+
                 }
-                if(encontradaComida(xCabeza, yCabeza+10)){
-                    
-                    this.snake.addParte(new Parte(xCabeza, yCabeza+20));
+                if (encontradaComida(xCabeza, yCabeza)) {
+
+                    this.snake.addParte(new Parte(cola.getX(), cola.getY() - 1));
                     addComida();
-                    
+
                 }
-                
+
                 break;
 
             case "RIGHT":
-                this.snake.addParte(new Parte(xCabeza+10, yCabeza));
+                this.snake.getSnake().getFirst().setX(xCabeza + 1);
                 this.snake.setDireccion("RIGHT");
-                
-                if(xCabeza > (int)mapaCanvas.getWidth()){
-                    
-                    this.snake.getSnake().getFirst().setX(0);
-                    
+
+                if (xCabeza > mapaMatriz.length-1) {
+
+                    cabeza.setX(1);
+
                 }
-                if(encontradaComida(xCabeza+10, yCabeza)){
-                    
-                    this.snake.addParte(new Parte(xCabeza+20, yCabeza));
+                if (encontradaComida(xCabeza, yCabeza)) {
+
+                    this.snake.addParte(new Parte(cola.getX() - 1, cola.getY()));
                     addComida();
                 }
-                
+
                 break;
 
             case "LEFT":
-                this.snake.addParte(new Parte(xCabeza-10, yCabeza));
+                this.snake.getSnake().getFirst().setX(xCabeza - 1);
                 this.snake.setDireccion("LEFT");
-                
-                
-                if(xCabeza < 0){
-                    
-                    this.snake.getSnake().getFirst().setX((int)mapaCanvas.getWidth());
-                    
+
+                if (xCabeza < 1) {
+
+                    cabeza.setX(mapaMatriz.length - 1);
+
                 }
-                if(encontradaComida(xCabeza-10, yCabeza)){
-                    
-                    this.snake.addParte(new Parte(xCabeza-20, yCabeza));
+                if (encontradaComida(xCabeza, yCabeza)) {
+
+                    this.snake.addParte(new Parte(cola.getX() + 1, cola.getY()));
                     addComida();
                 }
-                
+
                 break;
         }
-        
-        this.snake.getSnake().removeLast();
-        
-      
 
-        
+        cabeza = this.snake.getSnake().getFirst();
+
+        if (habraChoque(cabeza.getX(), cabeza.getY())) {
+
+            perdido = true;
+
+        }
 
     }
 
-    public Canvas getMapaCanvas() {
-        return mapaCanvas;
+    public int getCantidadMuros() {
+        return cantidadMuros;
     }
 
-    public void setMapaCanvas(Canvas mapaCanvas) {
-        this.mapaCanvas = mapaCanvas;
+    public void setCantidadMuros(int cantidadMuros) {
+        this.cantidadMuros = cantidadMuros;
+    }
+
+    public int getCantidadComidas() {
+        return cantidadComidas;
+    }
+
+    public void setCantidadComidas(int cantidadComidas) {
+        this.cantidadComidas = cantidadComidas;
+    }
+
+    
+    
+    public boolean isPerdido() {
+        return perdido;
+    }
+
+    public void setPerdido(boolean perdido) {
+        this.perdido = perdido;
     }
 
     public String[][] getMapaMatriz() {
@@ -335,14 +368,4 @@ public class Escenario {
         this.snake = snake;
     }
 
-    public int getCantidadMurosMax() {
-        return cantidadMurosMax;
-    }
-
-    public void setCantidadMurosMax(int cantidadMurosMax) {
-        this.cantidadMurosMax = cantidadMurosMax;
-    }
-
-    
-    
 }

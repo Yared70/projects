@@ -19,14 +19,15 @@ public class Snake {
     
         snake = new LinkedList<>();
         direccion = "RIGHT";
-        snake.add(new Parte(25, 25));
+        snake.add(new Parte(30, 30));
+        snake.add(new Parte(31, 30));
         
         
     }
     
     public void addParte(Parte parte){
         
-        snake.addFirst(parte);
+        snake.addLast(parte);
         
     }
 
